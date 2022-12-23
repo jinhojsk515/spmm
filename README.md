@@ -11,7 +11,7 @@ Molecule structure will be given in SMILES, and we used 53 simple cheimical prop
 Arguments can be passed with commands, or edited manually in the running code. But default values are already good to go, unless you want to modify the model size.
 
 
--Property generation: The model takes the query molecules in , and generate its 53 chemical properties that are used in the pre-training process.
+-Property generation: The model takes the query molecules in 'input_file', and generate their 53 chemical properties that are used in the pre-training process.
 
 ```
 python pg.py --checkpoint './Pretrain/checkpoint_08.pth' --input_file './data/pubchem-10m-simple.txt'
