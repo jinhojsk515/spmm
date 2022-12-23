@@ -152,7 +152,7 @@ def main(args, config):
 
     #### Dataset ####
     print("Creating dataset")
-    dataset_test=SMILESDataset_pretrain('./data/pubchem-10m-simple.txt',data_length=[2000000,2000100])
+    dataset_test=SMILESDataset_pretrain(args.data_file,data_length=[2000000,2000100])
     test_loader = DataLoader(dataset_test, batch_size=config['batch_size_test'], pin_memory=True, drop_last=False)
 
     tokenizer = BertTokenizer(vocab_file=args.vocab_filename, do_lower_case=False, do_basic_tokenize=False)
@@ -197,6 +197,7 @@ if __name__ == '__main__':
     #parser.add_argument('--checkpoint', default='./output/PG/checkpoint_best.pth')
     #parser.add_argument('--checkpoint', default='')
     parser.add_argument('--checkpoint', default='./Pretrain/checkpoint_08.pth')
+    parser.add_argument('--input_file', default='./data/pubchem-10m-simple.txt')
     parser.add_argument('--vocab_filename', default='./vocab_bpe_300.txt')
     parser.add_argument('--evaluate', default=True)
     parser.add_argument('--device', default='cuda')
