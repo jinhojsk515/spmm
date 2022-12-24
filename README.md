@@ -14,13 +14,13 @@ Arguments can be passed with commands, or edited manually in the running code. B
 -Property generation: The model takes the query molecules in `input_file`, and generate their 53 chemical properties that are used in the pre-training process.
 
 ```
-python pg.py --checkpoint './Pretrain/checkpoint_08.pth' --input_file './data/pubchem-10m-simple.txt'
+python pg.py --checkpoint './Pretrain/checkpointname.pth' --input_file './data/datafilename.txt'
 ```
 
 -Molecule generation: The model takes one query PV(contains 53 properties), and generate `n_generate` molecules that satisfies the input PV condition. The generated molecules will be written in `generated_molecules.txt`.
 
 ```
-python mmg.py --checkpoint './Pretrain/checkpoint_08.pth' --n_generate 100
+python mmg.py --checkpoint './Pretrain/checkpointname.pth' --n_generate 100
 ```
 
 Since passing all 53 chemical properties by argument is too clumsy, at this moment, you have to manually build the input PV in the code. Maybe you could modify the code to read .txt file to build input PV.
