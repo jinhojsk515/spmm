@@ -49,10 +49,6 @@ def generate_with_property(model, property, tokenizer, device,n_sample,prop_mask
     print('Generating samples for evaluation...')
     start_time = time.time()
 
-    property_mean = torch.tensor([1.4267, 4.2140, 363.0794, 2.7840, 1.9534, 5.6722, 71.2552,
-                                       25.0858, 26.8583, 2.7226, 96.8194, 0.6098])
-    property_std = torch.tensor([1.7206, 2.7012, 164.6371, 1.6557, 1.4255, 5.3647, 54.3515,
-                                      11.7913, 12.8683, 2.7610, 44.8578, 0.2197])
     with open('./normalize.pkl', 'rb') as w:
         norm = pickle.load(w)
     property_mean, property_std = norm
@@ -99,10 +95,7 @@ def generate_with_property(model, property, tokenizer, device,n_sample,prop_mask
 def metric_eval(prop_input,cand,mask):
     with open('./property_name.txt', 'r') as f: tmp=f.readlines()[1:54]
     names=[l.strip() for l in tmp]
-    #general_mean=torch.tensor([1.4267, 4.2140, 363.0794, 2.7840, 1.9534, 5.6722, 71.2552,
-    #              25.0858, 26.8583, 2.7226, 96.8194, 0.6098])   #mean
-    #general_mean=torch.tensor([1.0000, 4.0000, 331.1088, 3.0000, 2.0000, 5.0000, 65.0500,
-    #        22.0000, 24.0000, 2.6242, 87.0635, 0.6625]) #median
+
     with open('./normalize.pkl', 'rb') as w:    norm = pickle.load(w)
     general_mean = norm[0]
 
@@ -162,7 +155,7 @@ def main(args, config):
 
     # fix the seed for reproducibility
     #seed = args.seed + utils.get_rank()
-    seed=random.randint(0,1000)*1+873
+    seed=random.randint(0,1000)
     print('seed:',seed)
     torch.manual_seed(seed)
     np.random.seed(seed)
@@ -195,6 +188,7 @@ def main(args, config):
     ### Your have to set your prop_input and prop_mask from here ###
     prop_input=calculate_property('COc1cccc(NC(=O)CN(C)C(=O)COC(=O)c2cc(c3cccs3)nc3ccccc23)c1') # tensor with a length of 53
     prop_input[14] = 150        # 14th property: molecular weight
+    
     prop_mask=torch.ones(53)    # In prop_mask, 1: masked, 0:not masked
     prop_mask[14]=0
     ### Your have to set your prop_input and prop_mask until here ###
