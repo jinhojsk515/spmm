@@ -64,10 +64,6 @@ def evaluate(model, data_loader, tokenizer, device):
 
 @torch.no_grad()
 def metric_eval(ref,cand):
-    #mean = torch.tensor([1.4267, 4.2140, 363.0794, 2.7840, 1.9534, 5.6722, 71.2552,
-    #                                   25.0858, 26.8583, 2.7226, 96.8194, 0.6098])
-    #std = torch.tensor([1.7206, 2.7012, 164.6371, 1.6557, 1.4255, 5.3647, 54.3515,
-    #                                  11.7913, 12.8683, 2.7610, 44.8578, 0.2197])
     with open('./property_name.txt', 'r') as f: tmp=f.readlines()[1:54]
     names=[l.strip() for l in tmp]
     with open('./normalize.pkl', 'rb') as w:    norm = pickle.load(w)
@@ -152,7 +148,7 @@ def main(args, config):
 
     #### Dataset ####
     print("Creating dataset")
-    dataset_test=SMILESDataset_pretrain(args.data_file,data_length=[2000000,2000100])
+    dataset_test=SMILESDataset_pretrain(args.input_file,data_length=[0,1000])
     test_loader = DataLoader(dataset_test, batch_size=config['batch_size_test'], pin_memory=True, drop_last=False)
 
     tokenizer = BertTokenizer(vocab_file=args.vocab_filename, do_lower_case=False, do_basic_tokenize=False)
