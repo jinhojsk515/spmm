@@ -65,15 +65,9 @@ def generate_with_property(model, property, tokenizer, device,n_sample,prop_mask
     mpm_mask_expand = prop_mask.unsqueeze(0).unsqueeze(2).repeat(property_unk.size(0), 1, property_unk.size(2)).to(device)
     property_masked = property1 * (1 - mpm_mask_expand) + property_unk * mpm_mask_expand
 
-    #property_masked=property1
-    #mpm_mask_expand = prop_mask.unsqueeze(0).repeat(property1.size(0), 1)
-    #mpm_mask_expand = torch.cat([torch.ones((property1.size(0),1)),mpm_mask_expand],dim=1).to(device)
-
-
     property = torch.cat([model.property_cls.expand(property_masked.size(0),-1,-1),property_masked],dim=1)
     prop_embeds = model.property_encoder(inputs_embeds=property,return_dict=True).last_hidden_state   #batch*len(=patch**2+1)*feature
 
-    #text_input = torch.tensor([2,4]).expand(prop.size(0),2).to(device) #batch*2
     text_input = torch.tensor([2]).expand(prop.size(0), 1).to(device)  # batch*1
 
     for _ in range(100):
