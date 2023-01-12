@@ -71,18 +71,16 @@ class biALBEF(nn.Module):
 
         with torch.no_grad():
             self.temp.clamp_(0.01, 0.5)
+        
+        # property embedding
         property1=self.property_embed(property_original.unsqueeze(2)) #batch*12*feature
-
+        # 50 percent random masking on properties
         property_mask = self.property_mask.expand(property_original.size(0),property_original.size(1), -1)
         mpm_mask=torch.bernoulli(torch.ones_like(property_original)*0.5)#.to(torch.bool)
-        #tmp=property_original==-100.
-        #mpm_mask=mpm_mask.to(torch.bool)+tmp
-        #mpm_mask=mpm_mask.to(torch.long)    #batch*12, index to mask
         mpm_mask_expand=mpm_mask.unsqueeze(2).repeat(1,1,property_mask.size(2))
         property_masked = property1 * (1 - mpm_mask_expand) + property_mask * mpm_mask_expand
+        # add CLS token + embedding
         property=torch.cat([self.property_cls.expand(property_original.size(0),-1,-1),property_masked],dim=1)
-        #property=torch.cat([self.property_cls.expand(property1.size(0),-1,-1),property1],dim=1)
-
         prop_embeds = self.property_encoder(inputs_embeds=property,return_dict=True).last_hidden_state   #batch*len(=patch**2+1)*feature
 
         prop_atts = torch.ones(prop_embeds.size()[:-1], dtype=torch.long).to(property.device)    #batch*len
