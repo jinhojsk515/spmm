@@ -3,20 +3,6 @@ from rdkit.Chem import Descriptors,rdMolDescriptors
 import torch
 from rdkit import RDLogger
 
-a='Cc1cccc(CNNC(=O)C2(Cc3ccccc3CN=[N+]=[N-])N=C(c3ccc(OCCCO)cc3)OC2c2ccc(Br)cc2)c1'
-mol=Chem.MolFromSmiles(a)
-#print(rdMolDescriptors.CalcNumHBD(mol)) #https://www.rdkit.org/docs/source/rdkit.Chem.rdMolDescriptors.html
-#print(rdMolDescriptors.CalcNumHBA(mol))
-#print(rdMolDescriptors.CalcExactMolWt(mol))
-#print(rdMolDescriptors.CalcNumRings(mol))
-#print(rdMolDescriptors.CalcNumAromaticRings(mol))
-#print(rdMolDescriptors.CalcNumRotatableBonds(mol))
-#rint(rdMolDescriptors.CalcTPSA(mol),Descriptors.TPSA(mol))
-#print(mol.GetNumAtoms(onlyExplicit=False))    #https://www.rdkit.org/docs/source/rdkit.Chem.rdchem.html. harvested all
-#print(mol.GetNumBonds())
-#print(Descriptors.MolLogP(mol)) #https://kimchangheon.tistory.com/m/41, 122 available
-#print(Chem.Crippen.MolMR(mol))
-#print(Chem.QED.qed(mol))
 
 from inspect import getmembers, isfunction
 from rdkit.Chem import Descriptors
@@ -45,7 +31,7 @@ def calculate_property(smiles):
     return torch.tensor(output,dtype=torch.float)
 
 
-def calculate_property2(smiles):
+def calculate_property_small(smiles):
     RDLogger.DisableLog('rdApp.*')
     mol = Chem.MolFromSmiles(smiles)
     output=[]
