@@ -72,12 +72,10 @@ def generate_with_property(model, property, tokenizer, device,n_sample,prop_mask
 
     for _ in range(100):
         output = generate(model,prop_embeds, text_input,stochastic=True)
-        #output = generate(model,prop_embeds, text_input, stochastic=True, prop_att_mask=mpm_mask_expand)
-        #text_input=torch.cat([text_input[:,:-1],output,4*torch.ones((output.size(0),1),dtype=torch.long).to(device)],dim=-1)
         text_input = torch.cat([text_input, output], dim=-1)
     for i in range(text_input.size(0)):
         sentence=text_input[i,1:]
-        if 3 in sentence: sentence=sentence[:(sentence==3).nonzero(as_tuple=True)[0][0].item()]
+        if 3 in sentence: sentence=sentence[:(sentence==3).nonzero(as_tuple=True)[0][0].item()] # 3 is an index for [SEP] token. See vocab file
         cdd=tokenizer.convert_tokens_to_string(tokenizer.convert_ids_to_tokens(sentence))
         results.append(cdd)
 
@@ -184,7 +182,7 @@ def main(args, config):
     prop_input[14] = 150        # 14th property: molecular weight
     
     prop_mask=torch.ones(53)    # In prop_mask, 1: masked, 0:not masked
-    prop_mask[14]=0
+    prop_mask[14]=0             # The model only considers MW=140, and the other properties are masked
     ### Your have to set your prop_input and prop_mask until here ###
 
     samples = generate_with_property(model_without_ddp, prop_input, tokenizer, device, args.n_generate, prop_mask)
