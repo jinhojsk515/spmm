@@ -28,3 +28,22 @@ class SMILESDataset_pretrain(Dataset):
         properties=(calculate_property(smiles[1:])-self.property_mean)/self.property_std
 
         return properties, smiles
+
+
+class SMILESDataset_BBBP(Dataset):
+    def __init__(self, data_path):
+        data = pd.read_csv(data_path)
+        self.data = [data.iloc[i] for i in range(len(data)) if Chem.MolFromSmiles(data.iloc[i]['smiles']) is not None]
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, index):
+        try:
+            smiles = 'Q' + Chem.MolToSmiles(Chem.MolFromSmiles(self.data[index]['smiles']), isomericSmiles=False).replace('.', ' [SEP] Q')
+        except:
+            print(self.data[index]['smiles'], 'cannot be handled by the dataset.py')
+            raise NotImplementedError
+        label = int(self.data[index]['target'])
+
+        return smiles, label
