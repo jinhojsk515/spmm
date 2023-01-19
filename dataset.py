@@ -3,8 +3,9 @@ import torch
 from calc_property import calculate_property
 import random
 import pandas as pd
-from rdkit import Chem
+from rdkit import Chem, RDLogger
 import pickle
+RDLogger.DisableLog('rdApp.*')
 
 
 class SMILESDataset_pretrain(Dataset):
