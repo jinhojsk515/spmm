@@ -3,7 +3,7 @@ from dataset import SMILESDataset_pretrain
 import pytorch_lightning as pl
 from pytorch_lightning.strategies import DDPStrategy
 import torch.distributed
-from models import biALBEF
+from pretrain_models import biALBEF
 import argparse
 from pathlib import Path
 from transformers import BertTokenizer, WordpieceTokenizer
