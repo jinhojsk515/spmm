@@ -10,13 +10,6 @@ Molecule structure will be given in SMILES, and we used 53 simple cheimical prop
 ## Code running
 Arguments can be passed with commands, or edited manually in the running code. But default values are already good to go, unless you want to modify the model size.
 
-
--Pretrain
-
-```
-python pretrain.py
-```
-
 -Property generation: The model takes the query molecules in `input_file`, and generate their 53 chemical properties that are used in the pre-training process.
 
 ```
