@@ -4,7 +4,7 @@ VLP model for chemical domain, using molecule structure and chemical properties.
 
 Molecule structure will be given in SMILES, and we used 53 simple cheimical properties to build a property vector(PV) of a molecule.
 
-!! Only Pretrain, Molecule generation and Property generation are here, which can be run with checkpoint `.pt` file only and without any data. Downstream tasks which requires additional training(ex: molecule property prediction) are not included. 
+!! Only Molecule generation and Property generation are here, which can be run with checkpoint `.pt` file only and without any data. Downstream tasks which requires additional training(ex: molecule property prediction) are not included. 
 
 
 ## Code running
