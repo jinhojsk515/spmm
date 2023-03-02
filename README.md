@@ -1,6 +1,7 @@
 # SPMM: Structure-Property Multi-Modal foundation model
 
-VLP model for chemical domain, using molecule structure and chemical properties.
+VLP model for chemical domain, using molecule structure and chemical properties. The details can be found in the following paper: Bidirectional Generation of Structure and Properties Through a Single Molecular Foundation Model
+https://arxiv.org/abs/2211.10590
 
 Molecule structure will be given in SMILES, and we used 53 simple cheimical properties to build a property vector(PV) of a molecule.
 
