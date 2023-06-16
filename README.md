@@ -1,9 +1,11 @@
 # SPMM: Structure-Property Multi-Modal learning for molecules
 
-GitHub for SPMM, a multi-modal molecular pre-train model for a synergistic comprehension of molecular structure and properties.
+The official GitHub for SPMM, a multi-modal molecular pre-train model for a synergistic comprehension of molecular structure and properties.
 The details can be found in the following paper: 
 Bidirectional Generation of Structure and Properties Through a Single Molecular Foundation Model.
 https://arxiv.org/abs/2211.10590
+
+***The model checkpoint and data are not included in this repo due to their heavy load, and we're going to upload them separately and provide their link soon.***
 
 Molecule structure will be given in SMILES, and we used 53 simple chemical properties to build a property vector(PV) of a molecule.
 
