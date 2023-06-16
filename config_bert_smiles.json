@@ -12,12 +12,11 @@
   "max_position_embeddings": 512,
   "model_type": "bert",
   "num_attention_heads": 12,
-  "num_hidden_layers": 12,
+  "num_hidden_layers": 6,
   "pad_token_id": 0,
   "type_vocab_size": 2,
   "vocab_size": 300,
   "fusion_layer": 6,
   "encoder_width": 768,
-  "autoregressive": 0,
-  "add_cross_attention": "True"
+  "autoregressive": 0
 }
