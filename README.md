@@ -5,7 +5,7 @@ The details can be found in the following paper:
 Bidirectional Generation of Structure and Properties Through a Single Molecular Foundation Model.
 https://arxiv.org/abs/2211.10590
 
-***The model checkpoint and data are not included in this repo due to their heavy load, and we're going to upload them separately and provide their link soon.***
+***<ins>The model checkpoint and data are not included in this repo due to their heavy load, and we're going to upload them separately and provide their link soon.<ins>***
 
 ![method1](https://github.com/jinhojsk515/SPMM/assets/59189526/1ff52950-aa12-481f-94ea-4d1e97ac7bf3)
 
