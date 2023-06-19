@@ -250,13 +250,12 @@ class SMILESDataset_USPTO(Dataset):
 
     def __getitem__(self, index):
         rs, ps = self.data[index].split('\t')
-        rs = rs.replace(' [SEP]', '.')
         if self.is_aug and random.random() > 0.5:
-            r_mol = self.aug([Chem.MolFromSmiles(rs[5:])])[0]
-            rs = '[CLS]' + Chem.MolToSmiles(r_mol, canonical=False, isomericSmiles=False)
-            p_mol = self.aug([Chem.MolFromSmiles(ps[5:])])[0]
-            ps = '[CLS]' + Chem.MolToSmiles(p_mol, canonical=False, isomericSmiles=False)
-        return rs, ps
+            r_mol = self.aug([Chem.MolFromSmiles(rs[:])])[0]
+            rs = Chem.MolToSmiles(r_mol, canonical=False, isomericSmiles=False)
+            p_mol = self.aug([Chem.MolFromSmiles(ps[:])])[0]
+            ps = Chem.MolToSmiles(p_mol, canonical=False, isomericSmiles=False)
+        return '[CLS]' + rs, '[CLS]' + ps
 
 
 class SMILESDataset_USPTO_reverse(Dataset):

@@ -158,12 +158,12 @@ def main(args, config):
     # === Dataset === #
     print("Creating dataset")
     if args.mode == 'forward':
-        dataset_train = SMILESDataset_USPTO('./data/6_RXNprediction/USPTO-480k/train_parsed2.txt', data_length=None, aug=True)
-        dataset_val = SMILESDataset_USPTO('./data/6_RXNprediction/USPTO-480k/valid_parsed2.txt', data_length=[0, 100])
-        dataset_test = SMILESDataset_USPTO('./data/6_RXNprediction/USPTO-480k/test_parsed2.txt', data_length=None)
+        dataset_train = SMILESDataset_USPTO('./data/6_RXNprediction/USPTO-480k/train_parsed.txt', data_length=None, aug=True)
+        dataset_val = SMILESDataset_USPTO('./data/6_RXNprediction/USPTO-480k/valid_parsed.txt', data_length=None)
+        dataset_test = SMILESDataset_USPTO('./data/6_RXNprediction/USPTO-480k/test_parsed.txt', data_length=None)
     elif args.mode == 'retro':
         dataset_train = SMILESDataset_USPTO_reverse(mode='train', data_length=None, aug=True)
-        dataset_val = SMILESDataset_USPTO_reverse(mode='test', data_length=[0, 100])
+        dataset_val = SMILESDataset_USPTO_reverse(mode='test', data_length=None)
         dataset_test = SMILESDataset_USPTO_reverse(mode='test', data_length=None)
     else:
         print("\'args.mode\' should be \'forward\' or \'retro\'")
@@ -199,7 +199,7 @@ def main(args, config):
 
         msg = model.load_state_dict(state_dict, strict=False)
         print('load checkpoint from %s' % args.checkpoint)
-        print(msg)
+        # print(msg)
     model = model.to(device)
 
     arg_opt = config['optimizer']
@@ -257,11 +257,9 @@ def main(args, config):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--output_dir', default='./output/RXN')
-    # parser.add_argument('--checkpoint', default='./Pretrain/checkpoint_SPMM_20m.pth')
-    parser.add_argument('--checkpoint', default='./output/RXN/checkpoint_forward_best.pth')
-    # parser.add_argument('--checkpoint', default='./output/RXN/checkpoint_best.pth')
+    parser.add_argument('--checkpoint', default='./Pretrain/checkpoint_SPMM_20m.ckpt')
     parser.add_argument('--mode', default='forward', type=str)          # 'forward' or 'retro'
-    parser.add_argument('--evaluate', default=True, type=bool)          # if True, only evaluate the model on valid&test set (skip training)
+    parser.add_argument('--evaluate', default=False, type=bool)          # if True, only evaluate the model on valid&test set (skip training)
     parser.add_argument('--n_beam', default=5, type=int)                # if >1, use beam search to generate output
     parser.add_argument('--device', default='cuda')
     parser.add_argument('--lr', default=1e-4, type=float)
