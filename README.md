@@ -12,8 +12,8 @@ https://arxiv.org/abs/2211.10590
 Molecule structure will be given in SMILES, and we used 53 simple chemical properties to build a property vector(PV) of a molecule.
 
 ## File description
-* `data/`: Contains the data used for the experiments in the paper.
-* `Pretrain/`: Contains the checkpoint of the pre-trained SPMM.
+* `data/`: Contains the data used for the experiments in the paper. (you have to make this folder and put the data that you downloaded from the link above.)
+* `Pretrain/`: Contains the checkpoint of the pre-trained SPMM. (you have to make this folder and put the checkpoint that you downloaded from the link above.)
 * `vocab_bpe_300.txt`: Contains the SMILES tokens for the SMILES tokenizer.
 * `property_name.txt`: Contains the name of the 53 chemical properties.
 * `normalize.pkl`: Contains the mean and standard deviation of the 53 chemical properties that we used for PV.
