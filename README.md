@@ -82,5 +82,5 @@ Arguments can be passed with commands, or be edited manually in the running code
     ```
 
 ## Acknowledgement
-* The code of BERT with cross-attention layers `xbert.py` are modified from the one in [ALBEF](https://github.com/salesforce/ALBEF).
+* The code for BERT with cross-attention layers `xbert.py` and schedulers are modified from the one in [ALBEF](https://github.com/salesforce/ALBEF).
 * The code for SMILES augmentation is taken from [pysmilesutils](https://github.com/MolecularAI/pysmilesutils).
