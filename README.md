@@ -17,7 +17,7 @@ Molecule structure will be given in SMILES, and we used 53 simple chemical prope
 * `vocab_bpe_300.txt`: Contains the SMILES tokens for the SMILES tokenizer.
 * `property_name.txt`: Contains the name of the 53 chemical properties.
 * `normalize.pkl`: Contains the mean and standard deviation of the 53 chemical properties that we used for PV.
-* `calc_property.py`: Contains the code to calculate the 53 chemical properties and build a PV for a given SMILES.
+* `calc_property.py`: Contains the code to calculate the 53 chemical properties and build a PV for a given SMILES. **Modify this code accordingly to utilize SPMM pre-training for your custom PVs.**
 * `SPMM_models.py`: Contains the code for the SPMM model and its pre-training codes.
 * `SPMM_pretrain.py`: runs SPMM pre-training.
 * `d_*.py`: Codes for the downstream tasks.
