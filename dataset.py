@@ -12,15 +12,23 @@ RDLogger.DisableLog('rdApp.*')
 
 class SMILESDataset_pretrain(Dataset):
     def __init__(self, data_path, data_length=None, shuffle=False):
-        with open(data_path, 'r') as f:
-            lines = f.readlines()
+        if data_length is not None:
+            with open(data_path, 'r') as f:
+                for _ in range(data_length[0]):
+                    f.readline()
+                lines = []
+                for _ in range(data_length[1] - data_length[0]):
+                    lines.append(f.readline())
+        else:
+            with open(data_path, 'r') as f:
+                lines = f.readlines()
         self.data = [l.strip() for l in lines]
         with open('./normalize.pkl', 'rb') as w:
             norm = pickle.load(w)
         self.property_mean, self.property_std = norm
 
-        if shuffle: random.shuffle(self.data)
-        if data_length is not None: self.data = self.data[data_length[0]:data_length[1]]
+        if shuffle:
+            random.shuffle(self.data)
 
     def __len__(self):
         return len(self.data)

@@ -5,6 +5,7 @@ from torch import nn
 import torch.distributed
 import pytorch_lightning as pl
 from scheduler import create_scheduler
+import random
 
 
 class AttrDict(dict):
@@ -16,6 +17,7 @@ class AttrDict(dict):
 class SPMM(pl.LightningModule):
     def __init__(self, tokenizer=None, config=None, loader_len=0, no_train=False):
         super().__init__()
+        self.save_hyperparameters()
         self.automatic_optimization = False
         self.config = config
         self.tokenizer = tokenizer
@@ -82,13 +84,16 @@ class SPMM(pl.LightningModule):
         property_feature = self.property_embed(property_original.unsqueeze(2))
 
         unk_tokens = self.property_mask.expand(property_original.size(0), property_original.size(1), -1)
-        mpm_mask = torch.bernoulli(torch.ones_like(property_original) * 0.5)
+        if random.random() < 0.05:
+            mpm_mask = torch.ones_like(property_original)                           # all mask
+        else:
+            mpm_mask = torch.bernoulli(torch.ones_like(property_original) * 0.5)    # 1 for mask, 0 for keep
         mpm_mask_expand = mpm_mask.unsqueeze(2).repeat(1, 1, unk_tokens.size(2))
         property_masked = property_feature * (1 - mpm_mask_expand) + unk_tokens * mpm_mask_expand
-        property = torch.cat([self.property_cls.expand(property_original.size(0), -1, -1), property_masked], dim=1)
+        properties = torch.cat([self.property_cls.expand(property_original.size(0), -1, -1), property_masked], dim=1)
 
-        prop_embeds = self.property_encoder(inputs_embeds=property, return_dict=True).last_hidden_state
-        prop_atts = torch.ones(prop_embeds.size()[:-1], dtype=torch.long).to(property.device)
+        prop_embeds = self.property_encoder(inputs_embeds=properties, return_dict=True).last_hidden_state
+        prop_atts = torch.ones(prop_embeds.size()[:-1], dtype=torch.long).to(properties.device)
         prop_feat = F.normalize(self.property_proj(prop_embeds[:, 0, :]), dim=-1)
 
         text_embeds = self.text_encoder.bert(text_input_ids, attention_mask=text_attention_mask, return_dict=True, mode='text').last_hidden_state
@@ -97,7 +102,7 @@ class SPMM(pl.LightningModule):
 
         with torch.no_grad():
             self._momentum_update()
-            prop_embeds_m = self.property_encoder_m(inputs_embeds=property, return_dict=True).last_hidden_state
+            prop_embeds_m = self.property_encoder_m(inputs_embeds=properties, return_dict=True).last_hidden_state
             prop_feat_m = F.normalize(self.property_proj_m(prop_embeds_m[:, 0, :]), dim=-1)
             prop_feat_all = torch.cat([prop_feat_m.t(), self.prop_queue.clone().detach()], dim=1)
 
@@ -110,7 +115,7 @@ class SPMM(pl.LightningModule):
             sim_i2i_m = prop_feat_m @ prop_feat_all / self.temp
             sim_t2t_m = text_feat_m @ text_feat_all / self.temp
 
-            sim_targets = torch.zeros(sim_i2t_m.size()).to(property.device)
+            sim_targets = torch.zeros(sim_i2t_m.size()).to(properties.device)
             sim_targets.fill_diagonal_(1)
 
             sim_i2t_targets = alpha * F.softmax(sim_i2t_m, dim=1) + (1 - alpha) * sim_targets
@@ -268,8 +273,8 @@ class SPMM(pl.LightningModule):
 
     @torch.no_grad()
     def _dequeue_and_enqueue(self, img_feat, text_feat):
-        img_feats = img_feat
-        text_feats = text_feat
+        img_feats = concat_all_gather(img_feat)
+        text_feats = concat_all_gather(text_feat)
 
         batch_size = img_feats.shape[0]
 
@@ -354,3 +359,16 @@ class SPMM(pl.LightningModule):
         if self.global_rank == 0:
             print(f'\n mean loss: {tmp[0]:.4f}, {tmp[1]:.4f}, {tmp[2]:.4f}, {tmp[3]:.4f}')
         self.training_step_outputs.clear()
+
+
+@torch.no_grad()
+def concat_all_gather(tensor):
+    """
+    Performs all_gather operation on the provided tensors.
+    *** Warning ***: torch.distributed.all_gather has no gradient.
+    """
+    tensors_gather = [torch.ones_like(tensor) for _ in range(torch.distributed.get_world_size())]
+    torch.distributed.all_gather(tensors_gather, tensor, async_op=False)
+
+    output = torch.cat(tensors_gather, dim=0)
+    return output

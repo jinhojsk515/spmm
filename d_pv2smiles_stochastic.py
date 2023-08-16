@@ -14,7 +14,9 @@ warnings.filterwarnings(action='ignore')
 
 
 @torch.no_grad()
-def generate_with_property(model, property, tokenizer, device, n_sample, prop_mask):
+def generate_with_property(model, property, n_sample, prop_mask, stochastic=True):
+    device = model.device
+    tokenizer = model.tokenizer
     # test
     model.eval()
     print("PV-to-SMILES generation in stochastic manner...")
@@ -40,7 +42,7 @@ def generate_with_property(model, property, tokenizer, device, n_sample, prop_ma
         text_input = torch.tensor([tokenizer.cls_token_id]).expand(prop.size(0), 1).to(device)
         end_count = torch.zeros_like(text_input).to(bool)
         for _ in range(100):
-            output = generate(model, prop_embeds, text_input, stochastic=True)
+            output = generate(model, prop_embeds, text_input, stochastic=stochastic)
             end_count = torch.logical_or(end_count, (output == tokenizer.sep_token_id))
             if end_count.all():
                 break
@@ -160,7 +162,7 @@ def main(args, config):
     # prop_input = torch.zeros(53)
 
     print("=" * 50)
-    samples = generate_with_property(model, prop_input, tokenizer, device, args.n_generate, prop_mask)
+    samples = generate_with_property(model, prop_input, args.n_generate, prop_mask)
     metric_eval(prop_input, samples, prop_mask)
     print("=" * 50)
 

@@ -28,10 +28,33 @@ def generate(model, prop_input, text_embeds, text_atts):
 
 
 @torch.no_grad()
-def evaluate(model, data_loader, tokenizer, device):
+def pv_generate(model, data_loader):
     # test
+    with open('./normalize.pkl', 'rb') as w:
+        mean, std = pickle.load(w)
+    device = model.device
+    tokenizer = model.tokenizer
     model.eval()
     print("SMILES-to-PV generation...")
+    # convert list of string to dataloader
+    if isinstance(data_loader, list):
+        gather = []
+        text_input = tokenizer(data_loader, padding='longest', truncation=True, max_length=100, return_tensors="pt").to(device)
+        text_embeds = model.text_encoder.bert(text_input.input_ids[:, 1:], attention_mask=text_input.attention_mask[:, 1:],
+                                              return_dict=True, mode='text').last_hidden_state
+        prop_input = model.property_cls.expand(len(data_loader), -1, -1)
+        prediction = []
+        for _ in range(53):
+            output = generate(model, prop_input, text_embeds, text_input.attention_mask[:, 1:])
+            prediction.append(output)
+            output = model.property_embed(output.unsqueeze(2))
+            prop_input = torch.cat([prop_input, output], dim=1)
+
+        prediction = torch.stack(prediction, dim=-1)
+        for i in range(len(data_loader)):
+            gather.append(prediction[i].cpu()*std + mean)
+        return gather
+
     reference, candidate = [], []
     for (prop, text) in data_loader:
         text_input = tokenizer(text, padding='longest', truncation=True, max_length=100, return_tensors="pt").to(device)
@@ -139,7 +162,7 @@ def main(args, config):
     model = model.to(device)
 
     print("=" * 50)
-    r_test, c_test = evaluate(model, test_loader, tokenizer, device)
+    r_test, c_test = pv_generate(model, test_loader)
     metric_eval(r_test, c_test)
     print("=" * 50)
 

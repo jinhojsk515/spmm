@@ -12,7 +12,7 @@ from transformers import BertTokenizer, WordpieceTokenizer
 def main(args, config):
     # data
     print("Creating dataset")
-    dataset = SMILESDataset_pretrain(args.data_path)
+    dataset = SMILESDataset_pretrain(args.data_path, data_length=[0, 10000])
     print('#data:', len(dataset))
     data_loader = DataLoader(dataset, batch_size=config['batch_size'], num_workers=8, shuffle=True, pin_memory=True, drop_last=True)
     tokenizer = BertTokenizer(vocab_file=args.vocab_filename, do_lower_case=False, do_basic_tokenize=False)
@@ -27,7 +27,7 @@ def main(args, config):
     # training
     checkpoint_callback = pl.callbacks.ModelCheckpoint(dirpath=args.output_dir, filename='checkpoint_{epoch}',
                                                        save_top_k=config['schedular']['epochs'], monitor='loss_mlm')
-    trainer = pl.Trainer(accelerator='gpu', devices=[0], precision=16, max_epochs=config['schedular']['epochs'],
+    trainer = pl.Trainer(accelerator='gpu', devices=[0, 1], precision=16, max_epochs=config['schedular']['epochs'],
                          callbacks=[checkpoint_callback], strategy=DDPStrategy(find_unused_parameters=True), limit_val_batches=0.)
     trainer.fit(model, data_loader, None, ckpt_path=args.checkpoint if args.checkpoint else None)
 
@@ -35,9 +35,10 @@ def main(args, config):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--checkpoint', default='')
-    parser.add_argument('--data_path', default='./data/1_Pretrain/pretrain_20m.txt')
+    # parser.add_argument('--data_path', default='./data/1_Pretrain/pretrain_20m.txt')
+    parser.add_argument('--data_path', default='../VLP_chem/data/pubchem-100m-simple-shuffle.txt')
     parser.add_argument('--resume', default=False, type=bool)
-    parser.add_argument('--output_dir', default='./checkpoints')
+    parser.add_argument('--output_dir', default='./Pretrain')
     parser.add_argument('--vocab_filename', default='./vocab_bpe_300.txt')
     parser.add_argument('--seed', default=42, type=int)
     args = parser.parse_args()
