@@ -6,72 +6,56 @@ import torch.backends.cudnn as cudnn
 from transformers import BertTokenizer, WordpieceTokenizer
 from dataset import SMILESDataset_pretrain
 from torch.utils.data import DataLoader
-from torch.distributions.categorical import Categorical
 from calc_property import calculate_property
 from rdkit import Chem
 import random
 import pickle
-from bisect import bisect_left
-
-
-def BinarySearch(a, x):
-    i = bisect_left(a, x)
-    if i != len(a) and a[i] == x:
-        return i
-    else:
-        return -1
-
-
-def generate(model, image_embeds, text, stochastic=False, prop_att_mask=None):
-    text_atts = torch.where(text == 0, 0, 1)
-    if prop_att_mask is None:
-        image_atts = torch.ones(image_embeds.size()[:-1], dtype=torch.long).to(image_embeds.device)
-    else:
-        image_atts = prop_att_mask
-    token_output = model.text_encoder(text,
-                                      attention_mask=text_atts,
-                                      encoder_hidden_states=image_embeds,
-                                      encoder_attention_mask=image_atts,
-                                      return_dict=True,
-                                      is_decoder=True,
-                                      return_logits=True,
-                                      )[:, -1, :]  # batch*300
-    if stochastic:
-        p = torch.softmax(token_output, dim=-1)
-        m = Categorical(p)
-        token_output = m.sample()
-    else:
-        token_output = torch.argmax(token_output, dim=-1)
-    return token_output.unsqueeze(1)  # batch*1
+from tqdm import tqdm
+from d_pv2smiles_stochastic import generate, BinarySearch
 
 
 @torch.no_grad()
-def evaluate(model, data_loader, tokenizer, device):
+def evaluate(model, data_loader, tokenizer, device, stochastic=False, k=2):
     # test
-    print("PV-to-SMILES generation in deterministic manner...")
+    print(f"PV-to-SMILES generation in {'stochastic' if stochastic else 'deterministic'} manner with k={k}...")
     model.eval()
     reference, candidate = [], []
-    for (prop, text) in data_loader:
+    for (prop, text) in tqdm(data_loader):
         prop = prop.to(device, non_blocking=True)
-        property_feature = model.property_embed(prop.unsqueeze(2))
-        property = torch.cat([model.property_cls.expand(property_feature.size(0), -1, -1), property_feature], dim=1)
-        prop_embeds = model.property_encoder(inputs_embeds=property, return_dict=True).last_hidden_state
+        property1 = model.property_embed(prop.unsqueeze(2))  # batch*12*feature
+        properties = torch.cat([model.property_cls.expand(property1.size(0), -1, -1), property1], dim=1)
+        prop_embeds = model.property_encoder(inputs_embeds=properties, return_dict=True).last_hidden_state  # batch*len(=patch**2+1)*feature
 
-        text_input = torch.tensor([tokenizer.cls_token_id]).expand(prop.size(0), 1).to(device)
-        end_count = torch.zeros_like(text_input).to(bool)
+        product_input = torch.tensor([tokenizer.cls_token_id]).expand(1, 1).to(device)
+        values, indices = generate(model, prop_embeds, product_input, stochastic=stochastic, k=k)
+        # print(values, indices, values.size(), indices.size())
+        product_input = torch.cat([torch.tensor([tokenizer.cls_token_id]).expand(k, 1).to(device), indices.squeeze(0).unsqueeze(-1)], dim=-1)
+        current_p = values.squeeze(0)
+        final_output = []
         for _ in range(100):
-            output = generate(model, prop_embeds, text_input, stochastic=False)
-            end_count = torch.logical_or(end_count, (output == tokenizer.sep_token_id))
-            if end_count.all():
-                break
-            text_input = torch.cat([text_input, output], dim=-1)
-        for i in range(text_input.size(0)):
-            reference.append(text[i].replace('[CLS]', ''))
-            sentence = text_input[i]
-            if tokenizer.sep_token_id in sentence: sentence = sentence[:(sentence == tokenizer.sep_token_id).nonzero(as_tuple=True)[0][0].item()]
-            cdd = tokenizer.convert_tokens_to_string(tokenizer.convert_ids_to_tokens(sentence)).replace('[CLS]', '')
-            candidate.append(cdd)
-    print('Deterministic PV-to-SMILES generation done')
+            values, indices = generate(model, prop_embeds, product_input, stochastic=stochastic, k=k)
+            k2_p = current_p[:, None] + values
+            product_input_k2 = torch.cat([product_input.unsqueeze(1).repeat(1, k, 1), indices.unsqueeze(-1)], dim=-1)
+            if tokenizer.sep_token_id in indices:
+                ends = (indices == tokenizer.sep_token_id).nonzero(as_tuple=False)
+                for e in ends:
+                    p = k2_p[e[0], e[1]].cpu().item()
+                    final_output.append((p, product_input_k2[e[0], e[1]]))
+                    k2_p[e[0], e[1]] = -1e5
+                if len(final_output) >= k ** 1:
+                    break
+            current_p, i = torch.topk(k2_p.flatten(), k)
+            next_indices = torch.from_numpy(np.array(np.unravel_index(i.cpu().numpy(), k2_p.shape))).T
+            product_input = torch.stack([product_input_k2[i[0], i[1]] for i in next_indices], dim=0)
+
+        reference.append(text[0].replace('[CLS]', ''))
+        candidate_k = []
+        final_output = sorted(final_output, key=lambda x: x[0], reverse=True)[:k]
+        for p, sentence in final_output:
+            cdd = tokenizer.convert_tokens_to_string(tokenizer.convert_ids_to_tokens(sentence[:-1])).replace('[CLS]', '')
+            candidate_k.append(cdd)
+        candidate.append(candidate_k[0])
+        # candidate.append(random.choice(candidate_k))
     return reference, candidate
 
 
@@ -107,6 +91,7 @@ def metric_eval(ref, cand):
     u = len(lines)
     print('uniqueness:', u / v)
 
+    '''
     with open('data/1_Pretrain/pretrain_20m.txt', 'r') as f:
         corpus = [l.strip() for l in f.readlines()]
     corpus.sort()
@@ -115,6 +100,7 @@ def metric_eval(ref, cand):
         if BinarySearch(corpus, l) < 0:
             count += 1
     print('novelty:', count / u)
+    '''
 
     with open('generated_molecules.txt', 'w') as w:
         for v in valids:    w.write(v + '\n')
@@ -134,7 +120,7 @@ def main(args, config):
     # ### Dataset ### #
     print("Creating dataset")
     dataset_test = SMILESDataset_pretrain(args.input_file)
-    test_loader = DataLoader(dataset_test, batch_size=config['batch_size_test'], pin_memory=True, drop_last=False)
+    test_loader = DataLoader(dataset_test, batch_size=1, pin_memory=True, drop_last=False)
 
     tokenizer = BertTokenizer(vocab_file=args.vocab_filename, do_lower_case=False, do_basic_tokenize=False)
     tokenizer.wordpiece_tokenizer = WordpieceTokenizer(vocab=tokenizer.vocab, unk_token=tokenizer.unk_token, max_input_chars_per_word=250)
@@ -160,7 +146,7 @@ def main(args, config):
     model = model.to(device)
 
     print("=" * 50)
-    r_test, c_test = evaluate(model, test_loader, tokenizer, device)
+    r_test, c_test = evaluate(model, test_loader, tokenizer, device, stochastic=args.stochastic, k=args.k)
     metric_eval(r_test, c_test)
     print("=" * 50)
 
@@ -171,6 +157,8 @@ if __name__ == '__main__':
     parser.add_argument('--vocab_filename', default='./vocab_bpe_300.txt')
     parser.add_argument('--device', default='cuda')
     parser.add_argument('--input_file', default='./data/2_PV2SMILES/pubchem_1k_unseen.txt', type=str)
+    parser.add_argument('--k', default=2, type=int)
+    parser.add_argument('--stochastic', default=False, type=bool)
     args = parser.parse_args()
 
     config = {
