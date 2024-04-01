@@ -57,7 +57,7 @@ Arguments can be passed with commands, or be edited manually in the running code
     `d_regression.py`, `d_classification.py`, and `d_classification_multilabel.py`, perform regression, binary classification, and multi-label classification tasks, respectively.
 
     ```
-    python d_regression.py --checkpoint './Pretrain/checkpoint_SPMM.ckpt' --name 'esol'
+    python d_regression.py --checkpoint './Pretrain/checkpoint_SPMM.ckpt' --name 'bace'
     python d_classification.py --checkpoint './Pretrain/checkpoint_SPMM.ckpt' --name 'bbbp'
     python d_classification_multilabel.py --checkpoint './Pretrain/checkpoint_SPMM.ckpt' --name 'clintox'
     ```
