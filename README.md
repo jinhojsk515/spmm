@@ -65,7 +65,7 @@ Arguments can be passed with commands, or be edited manually in the running code
 
 5. Forward/retro-reaction prediction tasks
 
-    `d_rxn_prediction.py` performs both forward/reverse reaction prediction task on USPTO-480k and USPTO-50k dataset.
+    `d_rxn_prediction.py` performs both forward/reverse reaction prediction tasks on USPTO-480k and USPTO-50k datasets.
 
     e.g. forward reaction prediction, no beam search
     ```
