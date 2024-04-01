@@ -7,3 +7,4 @@ tokenizers==0.13.3
 torch==1.13.1
 tqdm==4.65.0
 transformers==4.30.1
+scikit-learn
