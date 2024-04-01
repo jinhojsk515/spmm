@@ -18,13 +18,6 @@ for n in names:
     else:
         descriptor_dict[n] = getattr(Descriptors, n)
 
-#for i in getmembers(Descriptors, isfunction):
-#    if i[0] in names:
-#        descriptor_dict[i[0]] = i[1]
-#        # print(i[0])    #name of properties
-#descriptor_dict['QED'] = lambda x: Chem.QED.qed(x)
-
-
 def calculate_property(smiles):
     RDLogger.DisableLog('rdApp.*')
     mol = Chem.MolFromSmiles(smiles)

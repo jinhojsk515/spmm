@@ -167,15 +167,15 @@ def main(args, config):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--checkpoint', default='./Pretrain/checkpoint_SPMM_20m.ckpt')
+    parser.add_argument('--checkpoint', default='./Pretrain/checkpoint_SPMM.ckpt')
     parser.add_argument('--vocab_filename', default='./vocab_bpe_300.txt')
     parser.add_argument('--device', default='cuda')
-    parser.add_argument('--seed', default=37, type=int)
+    parser.add_argument('--seed', default=42, type=int)
     parser.add_argument('--name', default='clintox', type=str)
-    parser.add_argument('--lr', default=2e-5, type=float)
+    parser.add_argument('--lr', default=5e-5, type=float)
     parser.add_argument('--min_lr', default=5e-6, type=float)
-    parser.add_argument('--epoch', default=10, type=int)
-    parser.add_argument('--batch_size', default=8, type=int)
+    parser.add_argument('--epoch', default=15, type=int)
+    parser.add_argument('--batch_size', default=16, type=int)
     args = parser.parse_args()
 
     cls_config = {

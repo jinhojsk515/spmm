@@ -9,7 +9,6 @@ from torch.utils.data import DataLoader
 import random
 import pickle
 from sklearn.metrics import r2_score
-import matplotlib.pyplot as plt
 
 
 def generate(model, prop_input, text_embeds, text_atts):
@@ -105,25 +104,6 @@ def metric_eval(ref, cand):
     r2 = np.array(r2)
     print('mean r^2 coefficient of determination:', r2.mean().item())
 
-    plt.figure(figsize=(27, 27))
-    with open('./property_name.txt', 'r') as f:
-        names = [l.strip() for l in f.readlines()[:53]]
-    for i, j in enumerate(range(53)):
-        x = rs[:, j]
-        y = cs[:, j]
-        plt.subplot(9, 6, i + 1)
-        plt.title(f'r2: {r2[j]:.3f}, RMSE: {rmse[j]:.3f}', fontdict={'fontsize': 9})
-        plt.scatter(x, y, c='r', s=0.5, alpha=0.5, label=names[j])
-        if i == 44:
-            plt.xlim([-2, 2])
-            plt.ylim([-2, 2])
-        plt.rc('xtick', labelsize=7)
-        plt.rc('ytick', labelsize=7)
-        plt.legend(loc='upper left')
-        plt.axline((0, 0), slope=1, color="#bbb", linestyle=(0, (5, 5)), zorder=-10)
-    plt.show()
-
-
 def main(args, config):
     device = torch.device(args.device)
 
@@ -169,9 +149,9 @@ def main(args, config):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--checkpoint', default='./Pretrain/checkpoint_SPMM_20m.ckpt')
+    parser.add_argument('--checkpoint', default='./Pretrain/checkpoint_SPMM.ckpt')
     parser.add_argument('--vocab_filename', default='./vocab_bpe_300.txt')
-    parser.add_argument('--input_file', default='./data/3_SMILES2PV/zinc15_1k_unseen.txt')
+    parser.add_argument('--input_file', default='../SPMM_release/data/3_SMILES2PV/zinc15_1k_unseen.txt')
     parser.add_argument('--device', default='cuda')
     args = parser.parse_args()
 
