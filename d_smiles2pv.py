@@ -38,7 +38,7 @@ def pv_generate(model, data_loader):
     # convert list of string to dataloader
     if isinstance(data_loader, list):
         if data_loader[0][5] != "[CLS]":
-            data_loader = ['[CLS]'+d for d in data_loaer]
+            data_loader = ['[CLS]'+d for d in data_loader]
         gather = []
         text_input = tokenizer(data_loader, padding='longest', truncation=True, max_length=100, return_tensors="pt").to(device)
         text_embeds = model.text_encoder.bert(text_input.input_ids[:, 1:], attention_mask=text_input.attention_mask[:, 1:],
