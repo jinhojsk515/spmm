@@ -42,7 +42,6 @@ class SPMM(pl.LightningModule):
                                                nn.Linear(property_width, 1))
         self.property_cls = nn.Parameter(torch.zeros(1, 1, property_width))
         self.property_mask = nn.Parameter(torch.zeros(1, 1, property_width))    # unk token for PV
-        self.property_mlm_mask = nn.Parameter(torch.zeros(1, 1, property_width))    # mask token for PV MLM
 
         # create momentum models
         self.property_encoder_m = BertForMaskedLM(config=bert_config2).bert
@@ -239,48 +238,20 @@ class SPMM(pl.LightningModule):
         loss_mlm = (1 - alpha) * loss_mlm + alpha * loss_distill_text
 
         # ================= MPM ================= #
-        do_mpm = False
-        if not do_mpm:
-            target = property_original.clone()
-            prop_embeds_causal = self.property_encoder(inputs_embeds=properties, is_decoder=True, return_dict=True).last_hidden_state
-            prop_output = self.text_encoder.bert(encoder_embeds=prop_embeds_causal,
-                                                 attention_mask=prop_atts,
-                                                 encoder_hidden_states=text_embeds,
-                                                 encoder_attention_mask=text_attention_mask,
-                                                 return_dict=True,
-                                                 is_decoder=True,
-                                                 mode='fusion',
-                                                 ).last_hidden_state[:, :-1, :]
-            pred = self.property_mtr_head(prop_output).squeeze()
+        target = property_original.clone()
+        prop_embeds_causal = self.property_encoder(inputs_embeds=properties, is_decoder=True, return_dict=True).last_hidden_state
+        prop_output = self.text_encoder.bert(encoder_embeds=prop_embeds_causal,
+                                             attention_mask=prop_atts,
+                                             encoder_hidden_states=text_embeds,
+                                             encoder_attention_mask=text_attention_mask,
+                                             return_dict=True,
+                                             is_decoder=True,
+                                             mode='fusion',
+                                             ).last_hidden_state[:, :-1, :]
+        pred = self.property_mtr_head(prop_output).squeeze()
 
-            lossfn = nn.MSELoss()
-            loss_mpm = lossfn(pred[(1 - mpm_mask).to(bool)], target[(1 - mpm_mask).to(bool)])
-        else:
-            target = property_original.clone()      # batch*53
-            pv_mlm_mask_full = torch.bernoulli(torch.ones_like(property_original) * 0.15)*(1-mpm_mask)  # 1 for mask, 0 for keep
-            pv_mlm_mask_random = torch.bernoulli(torch.ones_like(property_original) * 0.1) * pv_mlm_mask_full
-            pv_mlm_mask = pv_mlm_mask_full - pv_mlm_mask_random
-            pv_mlm_mask -= torch.bernoulli(torch.ones_like(property_original) * 0.1) * pv_mlm_mask
-            pv_mlm_input = property_original * (1 - pv_mlm_mask_random) + torch.randn_like(property_original) * pv_mlm_mask_random
-            pv_mlm_input = self.property_embed(pv_mlm_input.unsqueeze(2))
-            mask_tokens = self.property_mlm_mask.expand(property_original.size(0), property_original.size(1), -1)
-            pv_mlm_input = pv_mlm_input * (1 - pv_mlm_mask)[..., None] + mask_tokens * pv_mlm_mask[..., None]
-            pv_mlm_input = torch.cat([self.property_cls.expand(property_original.size(0), -1, -1), pv_mlm_input], dim=1)
-
-            prop_embeds_causal = self.property_encoder(inputs_embeds=pv_mlm_input, return_dict=True).last_hidden_state
-            prop_output = self.text_encoder.bert(encoder_embeds=prop_embeds_causal,
-                                                 attention_mask=prop_atts,
-                                                 encoder_hidden_states=text_embeds,
-                                                 encoder_attention_mask=text_attention_mask,
-                                                 return_dict=True,
-                                                 # is_decoder=True,
-                                                 mode='fusion',
-                                                 ).last_hidden_state[:, 1:, :]
-            pred = self.property_mtr_head(prop_output).squeeze()
-
-            # lossfn = nn.MSELoss()
-            lossfn = nn.HuberLoss(delta=1.0)
-            loss_mpm = lossfn(pred[(1 - pv_mlm_mask_full).to(bool)], target[(1 - pv_mlm_mask_full).to(bool)])
+        lossfn = nn.MSELoss()
+        loss_mpm = lossfn(pred[(1 - mpm_mask).to(bool)], target[(1 - mpm_mask).to(bool)])
 
         return loss_mlm, loss_mpm * 5, loss_ita, loss_itm
 
