@@ -11,7 +11,7 @@ from rdkit import Chem
 import random
 import pickle
 from tqdm import tqdm
-from d_pv2smiles_stochastic import generate, BinarySearch
+from d_pv2smiles_single import generate, BinarySearch
 
 
 @torch.no_grad()
