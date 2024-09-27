@@ -144,19 +144,6 @@ def metric_eval(prop_input, cand, mask):
     u = len(lines)
     print('uniqueness:', u / v)
 
-    '''
-    corpus = []
-    with open('data/1_Pretrain/pretrain_20m.txt', 'r') as f:
-        for _ in range(20000000):
-            corpus.append(f.readline().strip())
-    corpus.sort()
-    count = 0
-    for l in lines:
-        if BinarySearch(corpus, l) < 0:
-            count += 1
-    print('novelty:', count / u)
-    '''
-
     with open('generated_molecules.txt', 'w') as w:
         for v in valids:    w.write(v + '\n')
     print('Generated molecules are saved in \'generated_molecules.txt\'')
