@@ -183,15 +183,26 @@ def main(args, config):
         print(msg)
     model = model.to(device)
 
+    property_to_index = {}
+    with open('./property_name.txt', 'r') as f:
+        for idx, line in enumerate(f):
+            property_to_index[line.strip()] = idx
+
+    '''condition for stochastic molecule generation with a file s2p_input.csv'''
+    prop_mask, prop_input = torch.ones(53), torch.zeros(53)
+    for idx, row in pd.read_csv('./s2p_input.csv').iterrows():
+        prop_input[property_to_index[row['property']]] = float(row['input_value'])
+        prop_mask[property_to_index[row['property']]] = 0
+    
     '''condition for stochastic molecule generation of Fig.2-(a)'''
     # prop_mask = torch.zeros(53)  # 0 indicates no masking for that property
     # prop_input = calculate_property('COc1cccc(NC(=O)CN(C)C(=O)COC(=O)c2cc(c3cccs3)nc3ccccc23)c1')
 
     '''condition for stochastic molecule generation of Fig.2-(b)'''
-    prop_mask = torch.ones(53)        # 1 indicates masking for that property
-    prop_mask[14] = 0
-    prop_input = torch.zeros(53)
-    prop_input[14] = 150
+    # prop_mask = torch.ones(53)        # 1 indicates masking for that property
+    # prop_mask[14] = 0
+    # prop_input = torch.zeros(53)
+    # prop_input[14] = 150
 
     '''condition for stochastic molecule generation of Fig.2-(c)'''
     # prop_mask = torch.ones(53)
