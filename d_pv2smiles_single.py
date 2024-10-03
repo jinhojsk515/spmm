@@ -190,7 +190,7 @@ def main(args, config):
 
     '''condition for stochastic molecule generation with a file s2p_input.csv'''
     prop_mask, prop_input = torch.ones(53), torch.zeros(53)
-    for idx, row in pd.read_csv('./s2p_input.csv').iterrows():
+    for idx, row in pd.read_csv('./p2s_input.csv').iterrows():
         prop_input[property_to_index[row['property']]] = float(row['input_value'])
         prop_mask[property_to_index[row['property']]] = 0
     
